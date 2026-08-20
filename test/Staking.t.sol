@@ -5,126 +5,118 @@ import "forge-std/Test.sol";
 import "../src/MyToken.sol";
 import "../src/Staking.sol";
 
-contract StakingTest is Test{
+contract StakingTest is Test {
     MyToken token;
     Staking staking;
 
-    address alice=address(1);
+    address alice = address(1);
 
-    function setUp() public{
-        token=new MyToken();
-        staking=new Staking(address(token));
+    function setUp() public {
+        token = new MyToken();
+        staking = new Staking(address(token));
 
-        token.transfer(alice,1000 ether);
-        token.approve(address(staking),1000 ether);
+        token.transfer(alice, 1000 ether);
+        token.approve(address(staking), 1000 ether);
         staking.fundRewards(1000 ether);
-        
-
-    
     }
 
-    function testStake() public{
+    function testStake() public {
         vm.startPrank(alice);
-        token.approve(address(staking),100 ether);
+        token.approve(address(staking), 100 ether);
 
         staking.stake(100 ether);
 
         vm.stopPrank();
 
-        assertEq(token.balanceOf(alice),900 ether);
+        assertEq(token.balanceOf(alice), 900 ether);
 
-        assertEq(token.balanceOf(address(staking)),1100 ether);
+        assertEq(token.balanceOf(address(staking)), 1100 ether);
 
-        (uint256 amount,uint256 startTime) = staking.stakes(alice);
+        (uint256 amount, uint256 startTime) = staking.stakes(alice);
 
-        assertEq(amount,100 ether);
-        assertEq(startTime,block.timestamp);
+        assertEq(amount, 100 ether);
+        assertEq(startTime, block.timestamp);
     }
 
     function testCalculateReward() public {
-    vm.startPrank(alice);
+        vm.startPrank(alice);
 
-    token.approve(address(staking), 100 ether);
-    staking.stake(100 ether);
+        token.approve(address(staking), 100 ether);
+        staking.stake(100 ether);
 
-    vm.stopPrank();
+        vm.stopPrank();
 
-    // Move blockchain time forward by 1 year
-    vm.warp(block.timestamp + 365 days);
+        // Move blockchain time forward by 1 year
+        vm.warp(block.timestamp + 365 days);
 
-    uint256 reward = staking.calculateReward(alice);
+        uint256 reward = staking.calculateReward(alice);
 
-    assertEq(reward, 10 ether);
-}
-function testStakeEmitsEvent() public {
-    vm.startPrank(alice);
+        assertEq(reward, 10 ether);
+    }
 
-    token.approve(address(staking), 100 ether);
+    function testStakeEmitsEvent() public {
+        vm.startPrank(alice);
 
-    vm.expectEmit(true, false, false, true);
+        token.approve(address(staking), 100 ether);
 
-    emit Staking.Staked(alice, 100 ether);
+        vm.expectEmit(true, false, false, true);
 
-    staking.stake(100 ether);
+        emit Staking.Staked(alice, 100 ether);
 
-    vm.stopPrank();
-}
+        staking.stake(100 ether);
 
-function testWithdrawEmitsEvent() public {
-    vm.startPrank(alice);
+        vm.stopPrank();
+    }
 
-    token.approve(address(staking), 100 ether);
-    staking.stake(100 ether);
+    function testWithdrawEmitsEvent() public {
+        vm.startPrank(alice);
 
-    vm.stopPrank();
+        token.approve(address(staking), 100 ether);
+        staking.stake(100 ether);
 
-    vm.warp(block.timestamp + 365 days);
+        vm.stopPrank();
 
-    vm.expectEmit(true, false, false, true);
+        vm.warp(block.timestamp + 365 days);
 
-    emit Staking.Withdrawn(
-        alice,
-        100 ether,
-        10 ether
-    );
+        vm.expectEmit(true, false, false, true);
 
-    vm.prank(alice);
-    staking.withdraw();
-}
+        emit Staking.Withdrawn(alice, 100 ether, 10 ether);
 
-function testStakeZero() public{
-    vm.prank(alice);
+        vm.prank(alice);
+        staking.withdraw();
+    }
 
-    vm.expectRevert("Amount must be greater than 0");
+    function testStakeZero() public {
+        vm.prank(alice);
 
-    staking.stake(0);
-}
+        vm.expectRevert("Amount must be greater than 0");
 
-function testwithdrwanwithoutStake() public{
-    vm.prank(alice);
+        staking.stake(0);
+    }
 
-    vm.expectRevert("No stake");
+    function testwithdrwanwithoutStake() public {
+        vm.prank(alice);
 
-    staking.withdraw();
-}
+        vm.expectRevert("No stake");
 
-function testMultipleStakes() public{
-    vm.startPrank(alice);
+        staking.withdraw();
+    }
 
-    token.approve(address(staking),150 ether);
+    function testMultipleStakes() public {
+        vm.startPrank(alice);
 
-    staking.stake(100 ether);
-    staking.stake(50 ether);
+        token.approve(address(staking), 150 ether);
 
-    vm.stopPrank();
+        staking.stake(100 ether);
+        staking.stake(50 ether);
 
-    (uint256 amount,uint256 startTime)= staking.stakes(alice);
+        vm.stopPrank();
 
-    assertEq(amount,150 ether);
-    assertEq(startTime,block.timestamp);
+        (uint256 amount, uint256 startTime) = staking.stakes(alice);
 
-    assertEq(token.balanceOf(alice),
-    850 ether);
-}
+        assertEq(amount, 150 ether);
+        assertEq(startTime, block.timestamp);
 
+        assertEq(token.balanceOf(alice), 850 ether);
+    }
 }

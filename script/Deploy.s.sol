@@ -11,9 +11,7 @@ contract Deploy is Script {
 
         MyToken token = new MyToken();
 
-        Staking staking = new Staking(
-            address(token)
-        );
+        Staking staking = new Staking(address(token));
 
         vm.stopBroadcast();
 
